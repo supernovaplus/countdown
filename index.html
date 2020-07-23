@@ -99,8 +99,11 @@
                             }
                         }, 1000);
                     }
-                    console.log(window.history.state)
-                    window.history.pushState(null, null, "/index.html?date="+this.date);
+                    if(window.location.hostname === "supernovaplus.github.io"){
+                        window.history.pushState(null, null, "/countdown/?date="+this.date);
+                    }else{
+                        window.history.pushState(null, null, "/?date="+this.date);
+                    }
                     
                 }
             },
