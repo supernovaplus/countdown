@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>countdown-vue</title>
+    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+    <style>
+        *{
+            margin: 0;
+            padding: 0;
+        }
+        #app{
+            font-family: Arial, "Helvetica Neue", Helvetica, sans-serif;
+            display: flex;
+            flex-direction: column;
+            max-width: 500px;
+            margin: 0 auto;
+            color:rgb(75, 75, 75);
+        }
+        input, #app{
+            text-align: center;
+            font-size: 1.3em;
+            font-weight: bold;
+        }
+        label{
+            font-size: 1.2em;
+            font-weight: bold;
+        }
+        p:not(#errs){
+            font-weight: bold;
+            font-size: 4em;
+            cursor: default;
+        }
+        input{
+            border-radius: 5px;
+            border-top: 1px grey;
+            border-left: 1px grey;
+            border-right: 1px black;
+            border-right: 1px black;
+            margin: 1px;
+        }
+        input[type="text"]:hover{
+            text-shadow: 1px 1px rgb(217, 255, 0);
+            border-color: black;
+
+        }
+        input[type="button"]:hover{
+            background-color: rgb(217, 255, 0);
+            cursor: pointer;
+            border-color: black;
+        }
+    </style>
+</head>
+<body>
+    <div id="app"></div>
+    <script>
+    const isValidDate = d => d instanceof Date && !isNaN(d);
+    const formatTime = input => {
+        const secs =  input % 60;
+        const mins = Math.floor((input / 60) % 60);
+        const hour =  Math.floor(input / 3600);
+        return `${hour>9?hour:"0"+hour}:${mins>9?mins:"0"+mins}:${secs>9?secs:"0"+secs}`;
+    };
+    const urlDate = new URLSearchParams(window.location.search).get("date");
+
+    const app = new Vue({
+        el: '#app',
+        data: {
+            date: new Date().toLocaleString('lt').toString(),
+            errors: "",
+            countdown: -1,
+            interval: null,
+            timeDisplay: "00:00:00"
+        },
+        methods: {
+            handleStartBtn(){
+                if(this.interval) clearInterval(this.interval);
+                this.errors = "";
+                const newDate = new Date(this.date);
+                if(!isValidDate(newDate)) {
+                    this.errors = "Invalid Date";
+                }else{
+                    this.countdown = parseInt((newDate - Date.now()) / 1000);
+
+                    if(this.countdown <= 0){
+                        this.errors = "Time already passed";
+
+                    }else{
+                        this.timeDisplay = formatTime(this.countdown);
+                        this.interval = setInterval(() => {
+                            if(this.countdown > 0){
+                                this.countdown = this.countdown - 1;
+                                this.timeDisplay = formatTime(this.countdown);
+                            }else{
+                                if(this.interval) clearInterval(this.interval);
+                                this.timeDisplay = "00:00:00";
+                                this.errors = "Finished";
+                            }
+                        }, 1000);
+                    }
+                    console.log(window.history.state)
+                    window.history.pushState(null, null, "/index.html?date="+this.date);
+                    
+                }
+            },
+        },
+
+        mounted: function(){
+            if(urlDate) {
+                this.date = urlDate;
+                this.handleStartBtn();
+            }
+        },
+
+        template: `<div id="app">
+            <label for="setDate">SET DATE</label>
+            <input type="text" 
+                id="setDate" 
+                :value="date"
+                @input="(e)=>date = e.target.value">
+            <input type="button" value="Start" v-on:click="handleStartBtn">
+
+            <p v-if="this.timeDisplay">{{this.timeDisplay}}</p>
+            <p v-else></p>
+            <p v-if="this.errors" id="errs">{{this.errors}}</p>
+        </div>`
+    })
+</script>
+</body>
+</html>
